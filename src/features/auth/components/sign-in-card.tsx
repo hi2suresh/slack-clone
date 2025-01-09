@@ -15,6 +15,7 @@ import { useState } from 'react';
 import { FaGithub } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { SignInFlow } from '../types';
+import { TriangleAlert } from 'lucide-react';
 
 interface SignInCardProps {
   setState: (state: SignInFlow) => void;
@@ -25,8 +26,20 @@ export default function SignInCard({ setState }: SignInCardProps) {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
-  const handleProviderSignIn = (value: 'github' | 'google') => {
+
+  const onPasswordSigin = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setPending(true);
+    signIn('password', { email, password, flow: 'signIn' })
+      .catch(() => {
+        setError('Invalid email or password');
+      })
+      .finally(() => {});
+  };
+
+  const onProviderSignIn = (value: 'github' | 'google') => {
     setPending(true);
     signIn(value).finally(() => setPending(false));
   };
@@ -38,8 +51,14 @@ export default function SignInCard({ setState }: SignInCardProps) {
           Use your email or another service to continue
         </CardDescription>
       </CardHeader>
+      {!!error && (
+        <div className="bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive mb-6">
+          <TriangleAlert className="size-4" />
+          <p>{error}</p>
+        </div>
+      )}
       <CardContent className="space-y-5 px-0 pb-0">
-        <form className="space-y-2.5">
+        <form onSubmit={onPasswordSigin} className="space-y-2.5">
           <Input
             disabled={pending}
             placeholder="Email"
@@ -65,7 +84,7 @@ export default function SignInCard({ setState }: SignInCardProps) {
           <Button
             disabled={pending}
             onClick={() => {
-              handleProviderSignIn('google');
+              onProviderSignIn('google');
             }}
             className="w-full relative "
             variant="outline"
@@ -76,7 +95,7 @@ export default function SignInCard({ setState }: SignInCardProps) {
           </Button>
           <Button
             disabled={pending}
-            onClick={() => handleProviderSignIn('github')}
+            onClick={() => onProviderSignIn('github')}
             variant="outline"
             size="lg"
             className="w-full relative"
